@@ -11,6 +11,9 @@ Ideally, within a virtual environment.
 
 Changelog
 =========
+### 2.3.0
+- Added support for dictionary keys nested within arrays json_camelcase
+
 ### 2.2.0
 - Defaults asyncio event loop to uvloop automatically if it is installed
 - Added support for making endpoints `private` to enforce lack of automatic documentation creation for them.
