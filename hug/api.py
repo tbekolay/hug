@@ -376,12 +376,18 @@ class CLIInterfaceAPI(InterfaceAPI):
     def __call__(self, args=None):
         """Routes to the correct command line tool"""
         args = sys.argv if args is None else args
-        if not len(args) > 1 or not args[1] in self.commands:
+
+        # CLI properties can come before the command
+        cli_props = next(iter(self.commands.values())).cli_properties
+        for i in range(1, min(len(cli_props) * 2 + 2, len(args))):
+            if args[i] in self.commands:
+                break
+        else:
             print(str(self))
             return sys.exit(1)
 
-        command = args.pop(1)
-        self.commands.get(command)()
+        command = args.pop(i)
+        self.commands.get(command)(args=args)
 
     def __str__(self):
         return "{0}\n\nAvailable Commands:{1}\n".format(self.api.module.__doc__ or self.api.module.__name__,

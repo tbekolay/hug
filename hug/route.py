@@ -39,8 +39,11 @@ from hug.routing import URLRouter as http
 class Object(http):
     """Defines a router for classes and objects"""
 
+    __slots__ = ('cli_properties',)
+
     def __init__(self, urls=None, accept=HTTP_METHODS, output=None, **kwargs):
         super().__init__(urls=urls, accept=accept, output=output, **kwargs)
+        self.cli_properties = []
 
     def __call__(self, method_or_class=None, **kwargs):
         if not method_or_class and kwargs:
@@ -94,11 +97,17 @@ class Object(http):
             return class_definition
         return decorator
 
+    def cli_property(self, desc):
+        """Registers a property descriptor as a CLI argument."""
+        self.cli_properties.append(desc.fget.__name__)
+        return desc
+
     def cli(self, method):
         """Registers a method on an Object as a CLI route"""
         routes = getattr(method, '_hug_cli_routes', [])
         routes.append(self.route)
         method._hug_cli_routes = routes
+        method._hug_cli_properties = self.cli_properties
         return method
 
 

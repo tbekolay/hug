@@ -335,6 +335,8 @@ class CLI(Interface):
         if self.additional_options:
             use_parameters.append(self.additional_options)
 
+        self.cli_properties = getattr(function, '_hug_cli_properties', [])
+        use_parameters = self.cli_properties + use_parameters
 
         used_options = {'h', 'help'}
         nargs_set = self.interface.takes_args or self.interface.takes_kwargs
@@ -420,7 +422,7 @@ class CLI(Interface):
                     sys.stdout.buffer.write(b'\n')
         return data
 
-    def __call__(self):
+    def __call__(self, args=None):
         """Calls the wrapped function through the lens of a CLI ran command"""
         for requirement in self.requires:
             conclusion = requirement(request=sys.argv, module=self.api.module)
@@ -430,7 +432,11 @@ class CLI(Interface):
         if self.interface.is_method:
             self.parser.prog = "%s %s" % (self.api.module.__name__, self.interface.name)
 
-        known, unknown = self.parser.parse_known_args()
+        known, unknown = self.parser.parse_known_args(args=args)
+        for prop in self.cli_properties:
+            if prop in known:
+                setattr(self.interface.spec.__self__, prop, getattr(known, prop))
+                delattr(known, prop)
         pass_to_function = vars(known)
         for option, directive in self.directives.items():
             arguments = (self.defaults[option], ) if option in self.defaults else ()
